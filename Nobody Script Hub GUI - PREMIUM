@@ -3,6 +3,273 @@
 -- ║       Premium Edition  ·  NobodyGUI Handler  ║
 -- ╚══════════════════════════════════════════════╝
 
+-- ══════════════════════════════════════════════
+--  INTERNAL BOOTSTRAP  —  do not modify
+-- ══════════════════════════════════════════════
+
+-- version integrity tables (do not touch)
+local _d1 = {57, 12, 140, 125, 114, 71, 52, 44, 216, 16, 15, 47, 111, 119, 13, 101, 214}
+local _d2 = {112, 229, 142, 3, 81, 216, 174, 142, 79, 110, 172, 52, 47, 194, 49, 183, 176}
+local _d3 = {135, 22, 235, 63, 193, 40, 150, 185, 98, 35, 23, 116, 148, 40, 119, 51, 194}
+local _kx = {59, 5, 5, 6, 24, 83, 229, 232, 241, 252, 211, 212, 147, 193, 206, 182, 175}
+local _d4 = {142, 232, 186, 83, 189, 181, 107, 136, 36, 87, 125, 83, 236, 194, 138, 112, 166}
+local _d5 = {28, 117, 16, 161, 205, 137, 33, 108, 161, 108, 255, 202, 234, 73, 135, 71, 126}
+local _d6 = {134, 219, 204, 185, 112, 70, 252, 46, 24, 56, 78, 81, 216, 32, 197, 195, 239}
+
+-- resolve build checksum
+local _s = 0x5A
+local _r = {}
+for _i, _v in ipairs(_kx) do
+	_r[_i] = string.char(bit32.bxor(_v, (_s + (_i - 1) * 7) % 256))
+end
+local _ck = table.concat(_r)
+-- discard integrity tables after use
+_d1,_d2,_d3,_d4,_d5,_d6,_kx,_r,_s = nil,nil,nil,nil,nil,nil,nil,nil,nil
+
+local MAX_ATTEMPTS = 3
+
+local _Players     = game:GetService("Players")
+local _TweenService= game:GetService("TweenService")
+local _guiParent   = _Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local function buildKeyGUI()
+	local sg = Instance.new("ScreenGui")
+	sg.Name           = "NobodyKeySystem"
+	sg.ResetOnSpawn   = false
+	sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	sg.Parent         = _guiParent
+
+	-- dim background
+	local bg = Instance.new("Frame", sg)
+	bg.Size             = UDim2.new(1, 0, 1, 0)
+	bg.BackgroundColor3 = Color3.fromRGB(4, 4, 8)
+	bg.ZIndex           = 1000
+
+	-- animated accent bars
+	local barTop = Instance.new("Frame", bg)
+	barTop.Size             = UDim2.new(0, 0, 0, 2)
+	barTop.Position         = UDim2.new(0.5, 0, 0, 0)
+	barTop.AnchorPoint      = Vector2.new(0.5, 0)
+	barTop.BackgroundColor3 = Color3.fromRGB(120, 80, 255)
+	barTop.ZIndex           = 1001
+
+	local barBot = Instance.new("Frame", bg)
+	barBot.Size             = UDim2.new(0, 0, 0, 2)
+	barBot.Position         = UDim2.new(0.5, 0, 1, 0)
+	barBot.AnchorPoint      = Vector2.new(0.5, 1)
+	barBot.BackgroundColor3 = Color3.fromRGB(80, 200, 255)
+	barBot.ZIndex           = 1001
+
+	-- card
+	local card = Instance.new("Frame", bg)
+	card.Size             = UDim2.new(0, 400, 0, 220)
+	card.AnchorPoint      = Vector2.new(0.5, 0.5)
+	card.Position         = UDim2.new(0.5, 0, 0.65, 0)
+	card.BackgroundColor3 = Color3.fromRGB(14, 12, 26)
+	card.ZIndex           = 1002
+	local cr = Instance.new("UICorner", card); cr.CornerRadius = UDim.new(0, 18)
+	local cs = Instance.new("UIStroke", card)
+	cs.Color = Color3.fromRGB(120, 80, 255); cs.Thickness = 1.5
+
+	local grad = Instance.new("UIGradient", card)
+	grad.Color    = ColorSequence.new(Color3.fromRGB(26, 20, 50), Color3.fromRGB(14, 12, 26))
+	grad.Rotation = 135
+
+	-- icon
+	local iconWrap = Instance.new("Frame", card)
+	iconWrap.Size             = UDim2.new(0, 38, 0, 38)
+	iconWrap.Position         = UDim2.new(0, 18, 0, 18)
+	iconWrap.BackgroundColor3 = Color3.fromRGB(120, 80, 255)
+	iconWrap.ZIndex           = 1003
+	local iuc = Instance.new("UICorner", iconWrap); iuc.CornerRadius = UDim.new(0, 10)
+	local ig = Instance.new("UIGradient", iconWrap)
+	ig.Color    = ColorSequence.new(Color3.fromRGB(120,80,255), Color3.fromRGB(80,200,255))
+	ig.Rotation = 135
+	local iconL = Instance.new("TextLabel", iconWrap)
+	iconL.Size = UDim2.new(1,0,1,0); iconL.BackgroundTransparency = 1
+	iconL.Text = "🔑"; iconL.TextSize = 20; iconL.Font = Enum.Font.GothamBold; iconL.ZIndex = 1004
+
+	-- title
+	local title = Instance.new("TextLabel", card)
+	title.Size                   = UDim2.new(1, -70, 0, 24)
+	title.Position               = UDim2.new(0, 64, 0, 16)
+	title.BackgroundTransparency = 1
+	title.Text                   = "Nobody's Script Hub"
+	title.TextColor3             = Color3.fromRGB(235, 235, 245)
+	title.Font                   = Enum.Font.GothamBlack
+	title.TextSize               = 17
+	title.TextXAlignment         = Enum.TextXAlignment.Left
+	title.ZIndex                 = 1003
+
+	local sub = Instance.new("TextLabel", card)
+	sub.Size                   = UDim2.new(1, -70, 0, 16)
+	sub.Position               = UDim2.new(0, 64, 0, 42)
+	sub.BackgroundTransparency = 1
+	sub.Text                   = "Enter your access key to continue"
+	sub.TextColor3             = Color3.fromRGB(110, 110, 140)
+	sub.Font                   = Enum.Font.GothamSemibold
+	sub.TextSize               = 12
+	sub.TextXAlignment         = Enum.TextXAlignment.Left
+	sub.ZIndex                 = 1003
+
+	-- divider
+	local div = Instance.new("Frame", card)
+	div.Size             = UDim2.new(0.85, 0, 0, 1)
+	div.Position         = UDim2.new(0.075, 0, 0, 72)
+	div.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+	div.ZIndex           = 1003
+
+	-- input box
+	local inputWrap = Instance.new("Frame", card)
+	inputWrap.Size             = UDim2.new(0.85, 0, 0, 36)
+	inputWrap.Position         = UDim2.new(0.075, 0, 0, 88)
+	inputWrap.BackgroundColor3 = Color3.fromRGB(22, 20, 40)
+	inputWrap.ZIndex           = 1003
+	local iwc = Instance.new("UICorner", inputWrap); iwc.CornerRadius = UDim.new(0, 9)
+	local iws = Instance.new("UIStroke", inputWrap)
+	iws.Color = Color3.fromRGB(55, 55, 80); iws.Thickness = 1
+
+	local tb = Instance.new("TextBox", inputWrap)
+	tb.Size                  = UDim2.new(1, -16, 1, 0)
+	tb.Position              = UDim2.new(0, 10, 0, 0)
+	tb.BackgroundTransparency= 1
+	tb.PlaceholderText       = "Enter key..."
+	tb.PlaceholderColor3     = Color3.fromRGB(65, 65, 90)
+	tb.Text                  = ""
+	tb.TextColor3            = Color3.fromRGB(235, 235, 245)
+	tb.Font                  = Enum.Font.GothamSemibold
+	tb.TextSize              = 13
+	tb.TextXAlignment        = Enum.TextXAlignment.Left
+	tb.ClearTextOnFocus      = false
+	tb.ZIndex                = 1004
+
+	-- status label (wrong key / attempts)
+	local statusLbl = Instance.new("TextLabel", card)
+	statusLbl.Size                   = UDim2.new(0.85, 0, 0, 16)
+	statusLbl.Position               = UDim2.new(0.075, 0, 0, 130)
+	statusLbl.BackgroundTransparency = 1
+	statusLbl.Text                   = ""
+	statusLbl.TextColor3             = Color3.fromRGB(255, 90, 90)
+	statusLbl.Font                   = Enum.Font.GothamSemibold
+	statusLbl.TextSize               = 11
+	statusLbl.TextXAlignment         = Enum.TextXAlignment.Left
+	statusLbl.ZIndex                 = 1003
+
+	-- submit button
+	local submitBtn = Instance.new("TextButton", card)
+	submitBtn.Size             = UDim2.new(0.85, 0, 0, 34)
+	submitBtn.Position         = UDim2.new(0.075, 0, 0, 152)
+	submitBtn.BackgroundColor3 = Color3.fromRGB(120, 80, 255)
+	submitBtn.Text             = "UNLOCK"
+	submitBtn.TextColor3       = Color3.new(1, 1, 1)
+	submitBtn.Font             = Enum.Font.GothamBold
+	submitBtn.TextSize         = 13
+	submitBtn.AutoButtonColor  = false
+	submitBtn.ZIndex           = 1003
+	local sbc = Instance.new("UICorner", submitBtn); sbc.CornerRadius = UDim.new(0, 9)
+	local sbg = Instance.new("UIGradient", submitBtn)
+	sbg.Color    = ColorSequence.new(Color3.fromRGB(140,100,255), Color3.fromRGB(80,180,255))
+	sbg.Rotation = 0
+
+	-- hover effect
+	submitBtn.MouseEnter:Connect(function()
+		_TweenService:Create(submitBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(150,110,255)}):Play()
+	end)
+	submitBtn.MouseLeave:Connect(function()
+		_TweenService:Create(submitBtn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(120,80,255)}):Play()
+	end)
+
+	-- animate card in
+	task.spawn(function()
+		local TI = TweenInfo.new
+		_TweenService:Create(barTop, TI(0.5, Enum.EasingStyle.Quart), {Size = UDim2.new(1,0,0,2)}):Play()
+		_TweenService:Create(barBot, TI(0.5, Enum.EasingStyle.Quart), {Size = UDim2.new(1,0,0,2)}):Play()
+		task.wait(0.25)
+		_TweenService:Create(card, TI(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{Position = UDim2.new(0.5, 0, 0.5, 0)}):Play()
+		task.wait(0.3)
+		tb:CaptureFocus()
+	end)
+
+	return sg, card, tb, submitBtn, statusLbl, iws
+end
+
+-- ── Run key check ──────────────────────────────
+local keyPassed = false
+local keyDead   = false
+local attempts  = 0
+
+local keySG, keyCard, keyTB, keySubmit, keyStatus, keyInputStroke = buildKeyGUI()
+
+local function tryKey()
+	local entered = keyTB.Text
+	if entered == _ck then
+		-- correct — flash green and destroy
+		keyStatus.Text       = "✓  Access granted"
+		keyStatus.TextColor3 = Color3.fromRGB(60, 220, 140)
+		_TweenService:Create(keyInputStroke, TweenInfo.new(0.2),
+			{Color = Color3.fromRGB(60, 220, 140)}):Play()
+		_TweenService:Create(keyCard, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In),
+			{Position = UDim2.new(0.5, 0, 0.44, 0)}):Play()
+		task.wait(0.6)
+		_TweenService:Create(keySG:FindFirstChildOfClass("Frame"),
+			TweenInfo.new(0.3, Enum.EasingStyle.Quart),
+			{BackgroundTransparency = 1}):Play()
+		task.wait(0.35)
+		keySG:Destroy()
+		keyPassed = true
+	else
+		-- wrong key
+		attempts = attempts + 1
+		_TweenService:Create(keyInputStroke, TweenInfo.new(0.1),
+			{Color = Color3.fromRGB(255, 90, 90)}):Play()
+		task.delay(1, function()
+			_TweenService:Create(keyInputStroke, TweenInfo.new(0.2),
+				{Color = Color3.fromRGB(55, 55, 80)}):Play()
+		end)
+
+		if attempts >= MAX_ATTEMPTS then
+			keyStatus.Text       = "✕  Too many attempts — rerun the script"
+			keyStatus.TextColor3 = Color3.fromRGB(255, 90, 90)
+			keySubmit.Active     = false
+			keySubmit.BackgroundColor3 = Color3.fromRGB(60, 40, 40)
+			keyTB.Editable       = false
+			-- wait a moment so the message is readable, then destroy everything
+			task.delay(2.5, function()
+				-- fade the card out
+				_TweenService:Create(keyCard, TweenInfo.new(0.4, Enum.EasingStyle.Quart),
+					{BackgroundTransparency = 1, Position = UDim2.new(0.5, 0, 0.56, 0)}):Play()
+				_TweenService:Create(keySG:FindFirstChildOfClass("Frame"),
+					TweenInfo.new(0.4, Enum.EasingStyle.Quart),
+					{BackgroundTransparency = 1}):Play()
+				task.wait(0.45)
+				keySG:Destroy()
+				keyDead = true
+			end)
+		else
+			keyStatus.Text = "✕  Incorrect key  (" .. (MAX_ATTEMPTS - attempts) .. " attempt"
+				.. (MAX_ATTEMPTS - attempts == 1 and "" or "s") .. " remaining)"
+			keyStatus.TextColor3 = Color3.fromRGB(255, 90, 90)
+			-- shake the card
+			local origPos = UDim2.new(0.5, 0, 0.5, 0)
+			_TweenService:Create(keyCard, TweenInfo.new(0.05), {Position = UDim2.new(0.5, -10, 0.5, 0)}):Play()
+			task.wait(0.06)
+			_TweenService:Create(keyCard, TweenInfo.new(0.05), {Position = UDim2.new(0.5, 10, 0.5, 0)}):Play()
+			task.wait(0.06)
+			_TweenService:Create(keyCard, TweenInfo.new(0.05), {Position = UDim2.new(0.5, -6, 0.5, 0)}):Play()
+			task.wait(0.06)
+			_TweenService:Create(keyCard, TweenInfo.new(0.12, Enum.EasingStyle.Back), {Position = origPos}):Play()
+		end
+	end
+end
+
+keySubmit.MouseButton1Click:Connect(tryKey)
+keyTB.FocusLost:Connect(function(enter) if enter then tryKey() end end)
+
+-- wait until key is accepted before loading the rest of the hub
+repeat task.wait(0.1) until keyPassed or keyDead
+if keyDead then return end
+
 local Players      = game:GetService("Players")
 local RunService   = game:GetService("RunService")
 local UIS          = game:GetService("UserInputService")
@@ -998,20 +1265,20 @@ createToggle(charSubs["Movement"], "Fly", "WASD + Space/LCtrl · camera-relative
 	if on then
 		local c = player.Character; local hrp = c and c:FindFirstChild("HumanoidRootPart")
 		if not hrp then return end
-		local bv = Instance.new("BodyVelocity", hrp); bv.MaxForce = Vector3.new(1e5,1e5,1e5); bv.Velocity = Vector3.zero
+		local bv = Instance.new("BodyVelocity", hrp); bv.MaxForce = Vector3.new(1e5,1e5,1e5); bv.Velocity = Vector3.new(0,0,0)
 		local bg = Instance.new("BodyGyro",     hrp); bg.MaxTorque = Vector3.new(1e5,1e5,1e5); bg.P = 1e4
 		RunService:BindToRenderStep("FlyUpdate", Enum.RenderPriority.Input.Value, function()
 			local cam = workspace.CurrentCamera
 			local cf  = cam.CFrame
 			local sp  = 60
-			local vel = Vector3.zero
+			local vel = Vector3.new(0,0,0)
 			if UIS:IsKeyDown(Enum.KeyCode.W)     then vel = vel + cf.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.S)     then vel = vel - cf.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.A)     then vel = vel - cf.RightVector end
 			if UIS:IsKeyDown(Enum.KeyCode.D)     then vel = vel + cf.RightVector end
 			if UIS:IsKeyDown(Enum.KeyCode.Space) then vel = vel + Vector3.new(0,1,0) end
 			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then vel = vel - Vector3.new(0,1,0) end
-			bv.Velocity  = vel.Magnitude > 0 and vel.Unit * sp or Vector3.zero
+			bv.Velocity  = vel.Magnitude > 0 and vel.Unit * sp or Vector3.new(0,0,0)
 			bg.CFrame    = cf
 		end)
 	else
@@ -1125,7 +1392,7 @@ createButton(charSubs["Teleport"], "Bring All Players to Me",
 	for _, p in ipairs(Players:GetPlayers()) do
 		if p ~= player then
 			local pc = p.Character; local phrp = pc and pc:FindFirstChild("HumanoidRootPart")
-			if phrp then phrp.CFrame = CFrame.new(pos + Vector3.new(count * 2, 0, 0)); count += 1 end
+			if phrp then phrp.CFrame = CFrame.new(pos + Vector3.new(count * 2, 0, 0)); count = count + 1 end
 		end
 	end
 	notify("Brought " .. count .. " players", "success")
@@ -1162,7 +1429,7 @@ createToggle(charSubs["Modifiers"], "Freeze Self", "Anchors HRP — you cannot b
 	local c = player.Character; local hrp = c and c:FindFirstChild("HumanoidRootPart")
 	if hrp then
 		hrp.Anchored = on
-		if on then hrp.Velocity = Vector3.zero; hrp.RotVelocity = Vector3.zero end
+		if on then hrp.Velocity = Vector3.new(0,0,0); hrp.RotVelocity = Vector3.new(0,0,0) end
 	end
 end)
 divider(charSubs["Modifiers"])
@@ -1201,12 +1468,13 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 	if on then
 		RunService:BindToRenderStep("ESPUpdate", Enum.RenderPriority.Camera.Value+1, function()
 			for _, tgt in ipairs(Players:GetPlayers()) do
-				if tgt == player then continue end
+				repeat
+				if tgt == player then break end
 				local ch = tgt.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
 				if not hrp then
 					if ch then local old = ch:FindFirstChild("ESPBillboard"); if old then old:Destroy() end end
-					continue
+					break
 				end
 				local bb = hrp:FindFirstChild("ESPBillboard")
 				if not bb then
@@ -1236,6 +1504,7 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 				if bb then bb:Destroy() end
 			end
 		end
+		until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1243,8 +1512,9 @@ divider(visSubs["Players"])
 createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outline through walls", function(on)
 	_G.HLEnabled = on
 	for _, p in ipairs(Players:GetPlayers()) do
-		if p == player then continue end
-		local ch = p.Character; if not ch then continue end
+		repeat
+		if p == player then break end
+		local ch = p.Character; if not ch then break end
 		if on then
 			local hl = Instance.new("SelectionBox", ch)
 			hl.Name = "NobodyHL"; hl.Adornee = ch
@@ -1254,6 +1524,7 @@ createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outl
 			local hl = ch:FindFirstChild("NobodyHL"); if hl then hl:Destroy() end
 		end
 	end
+	until true
 end)
 divider(visSubs["Players"])
 
@@ -1264,8 +1535,9 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 			if not _G.RainbowHLOn then RunService:UnbindFromRenderStep("RainbowHL"); return end
 			local hue = tick() * 0.2 % 1
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
-				local ch = p.Character; if not ch then continue end
+				repeat
+				if p == player then break end
+				local ch = p.Character; if not ch then break end
 				local hl = ch:FindFirstChild("NobodyRL")
 				if not hl then
 					hl = Instance.new("SelectionBox", ch)
@@ -1275,6 +1547,7 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 				local col = Color3.fromHSV(hue, 0.85, 1)
 				hl.Color3 = col; hl.SurfaceColor3 = col
 			end
+			until true
 		end)
 	else
 		for _, p in ipairs(Players:GetPlayers()) do
@@ -1290,10 +1563,11 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 	if on then
 		RunService:BindToRenderStep("HealthBarUpdate", Enum.RenderPriority.Camera.Value+1, function()
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
-				if not hrp or not hum then continue end
+				if not hrp or not hum then break end
 				local bb = hrp:FindFirstChild("NobodyHPBar")
 				if not bb then
 					bb = Instance.new("BillboardGui", hrp); bb.Name = "NobodyHPBar"
@@ -1320,6 +1594,7 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 				if hrp then local bb = hrp:FindFirstChild("NobodyHPBar"); if bb then bb:Destroy() end end
 			end
 		end
+		until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1330,9 +1605,10 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 			local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if not myHRP then return end
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				local bb = hrp:FindFirstChild("NobodyNameTag")
 				if not bb then
 					bb = Instance.new("BillboardGui", hrp); bb.Name = "NobodyNameTag"
@@ -1359,6 +1635,7 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 				if hrp then local bb = hrp:FindFirstChild("NobodyNameTag"); if bb then bb:Destroy() end end
 			end
 		end
+		until true
 	end
 end)
 
@@ -1553,13 +1830,15 @@ createToggle(desSubs["Aim"], "Aimbot", "Hold RMB to snap camera to nearest enemy
 			local best, bestDist = nil, math.huge
 			local cx, cy = cam.ViewportSize.X/2, cam.ViewportSize.Y/2
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				local sp, onScreen = cam:WorldToScreenPoint(hrp.Position)
-				if not onScreen then continue end
+				if not onScreen then break end
 				local d = ((Vector2.new(sp.X,sp.Y)) - Vector2.new(cx,cy)).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
+				until true
 			end
 			if best then
 				cam.CFrame = CFrame.new(cam.CFrame.Position, best.Position + Vector3.new(0,1.5,0))
@@ -1577,11 +1856,13 @@ createToggle(desSubs["Aim"], "Silent Aim", "LMB snaps shot to nearest enemy head
 			local cam = workspace.CurrentCamera
 			local best, bestDist = nil, math.huge
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local head = ch and ch:FindFirstChild("Head")
-				if not head then continue end
+				if not head then break end
 				local d = (head.Position - cam.CFrame.Position).Magnitude
 				if d < bestDist then bestDist = d; best = head end
+				until true
 			end
 			if best then
 				cam.CFrame = CFrame.new(cam.CFrame.Position, best.Position)
@@ -1609,9 +1890,10 @@ createToggle(desSubs["Aim"], "Lock-On Aim", "Hold RMB — hard locks camera to n
 			if not myHRP then return end
 			local best, bestDist = nil, math.huge
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				local d = (hrp.Position - myHRP.Position).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
 			end
@@ -1633,9 +1915,10 @@ createToggle(desSubs["Aim"], "Aim-at-Nearest on Shot", "Every LMB automatically 
 			if not myHRP then return end
 			local best, bestDist = nil, math.huge
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				local d = (hrp.Position - myHRP.Position).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
 			end
@@ -1659,6 +1942,7 @@ createToggle(desSubs["Aim"], "No Camera Shake", "Nullifies camera recoil/shake e
 				math.asin(cf.LookVector.Y * -1), math.atan2(-cf.LookVector.X, -cf.LookVector.Z), 0)
 		end)
 	else RunService:UnbindFromRenderStep("NoCamShake") end
+	until true
 end)
 
 -- ── Melee ─────────────────────────────────────
@@ -1672,9 +1956,10 @@ createToggle(desSubs["Melee"], "Kill Aura", "Virtual-clicks nearest enemy within
 			local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if not myHRP then return end
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+				repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				if (hrp.Position - myHRP.Position).Magnitude <= 12 then
 					local sp = workspace.CurrentCamera:WorldToScreenPoint(hrp.Position)
 					VIM:SendMouseButtonEvent(sp.X, sp.Y, 0, true,  game, 0)
@@ -1683,6 +1968,7 @@ createToggle(desSubs["Melee"], "Kill Aura", "Virtual-clicks nearest enemy within
 			end
 		end)
 	else RunService:UnbindFromRenderStep("KillAura") end
+	until true
 end)
 divider(desSubs["Melee"])
 
@@ -1773,7 +2059,7 @@ createToggle(desSubs["Defense"], "Anti Knockback", "Zeroes velocity if external 
 		RunService:BindToRenderStep("AntiKB", Enum.RenderPriority.Character.Value+1, function()
 			local c = player.Character; local hrp = c and c:FindFirstChild("HumanoidRootPart")
 			if hrp and hrp.Velocity.Magnitude > 50 then
-				hrp.Velocity = Vector3.zero
+				hrp.Velocity = Vector3.new(0,0,0)
 			end
 		end)
 	else RunService:UnbindFromRenderStep("AntiKB") end
@@ -1831,14 +2117,14 @@ createInputButton(desSubs["Utility"], "Fling Player",
 	myHum.WalkSpeed = 0; myHum.JumpPower = 0; myHum.PlatformStand = true
 	RunService:UnbindFromRenderStep("NoclipUpdate")
 	local bv = Instance.new("BodyVelocity", myHRP)
-	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.zero
+	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.new(0,0,0)
 	local cleaned = false
 	local function cleanup()
 		if cleaned then return end; cleaned = true
 		if bv and bv.Parent then bv:Destroy() end
 		myHum.WalkSpeed = origWS; myHum.JumpPower = origJP
 		myHum.PlatformStand = false; myHum.AutoRotate = true
-		myHRP.Anchored = true; myHRP.Velocity = Vector3.zero
+		myHRP.Anchored = true; myHRP.Velocity = Vector3.new(0,0,0)
 		myHRP.CFrame = origCF; task.wait(0.2); myHRP.Anchored = false
 		myHum:ChangeState(Enum.HumanoidStateType.GettingUp)
 	end
@@ -1877,7 +2163,7 @@ createInputButton(desSubs["Utility"], "Kill Player (Fling)",
 	local origCF = myHRP.CFrame; local origWS = myHum.WalkSpeed; local origJP = myHum.JumpPower
 	myHum.WalkSpeed = 0; myHum.JumpPower = 0; myHum.PlatformStand = true
 	local bv = Instance.new("BodyVelocity", myHRP)
-	bv.MaxForce = Vector3.new(math.huge,math.huge,math.huge); bv.Velocity = Vector3.zero
+	bv.MaxForce = Vector3.new(math.huge,math.huge,math.huge); bv.Velocity = Vector3.new(0,0,0)
 	local start = tick(); local cleaned = false; local conn
 	conn = RunService.Heartbeat:Connect(function()
 		if not bv or not bv.Parent then conn:Disconnect(); return end
@@ -1904,14 +2190,15 @@ createButton(desSubs["Utility"], "Fling All Players", "Flings every player on th
 	if not myHRP then return end
 	local count = 0
 	for _, p in ipairs(Players:GetPlayers()) do
-		if p == player then continue end
+		repeat
+		if p == player then break end
 		local pc = p.Character; local phrp = pc and pc:FindFirstChild("HumanoidRootPart")
-		if not phrp then continue end
+		if not phrp then break end
 		local bv = Instance.new("BodyVelocity", phrp)
 		bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
 		bv.Velocity = Vector3.new(math.random(-500,500), 800, math.random(-500,500))
 		game:GetService("Debris"):AddItem(bv, 0.5)
-		count += 1
+		count = count + 1
 	end
 	notify("Flung " .. count .. " players", "success")
 end)
@@ -1940,6 +2227,7 @@ createToggle(desSubs["Utility"], "Anti-Detect (Bypass Cam)", "Sets camera subjec
 		local c = player.Character; local hum = c and c:FindFirstChildOfClass("Humanoid")
 		workspace.CurrentCamera.CameraSubject = hum
 	end
+	until true
 end)
 
 -- ══════════════════════════════════════════════
@@ -2042,7 +2330,7 @@ createButton(wldSubs["Environment"], "Remove Invisible Walls",
 	local count = 0
 	for _, p in ipairs(workspace:GetDescendants()) do
 		if p:IsA("BasePart") and p.Transparency >= 0.99 and p.CanCollide then
-			p:Destroy(); count += 1
+			p:Destroy(); count = count + 1
 		end
 	end
 	notify("Removed " .. count .. " invisible walls", "success")
@@ -2071,7 +2359,7 @@ createButton(wldSubs["Parts"], "Remove All Decals",
 	"Strips every Decal and Texture from workspace", function()
 	local count = 0
 	for _, d in ipairs(workspace:GetDescendants()) do
-		if d:IsA("Decal") or d:IsA("Texture") then d:Destroy(); count += 1 end
+		if d:IsA("Decal") or d:IsA("Texture") then d:Destroy(); count = count + 1 end
 	end
 	notify("Removed " .. count .. " decals", "success")
 end)
@@ -2102,7 +2390,7 @@ createButton(wldSubs["Parts"], "Remove All NPCs",
 	local count = 0
 	for _, m in ipairs(workspace:GetDescendants()) do
 		if m:IsA("Model") and m:FindFirstChildOfClass("Humanoid") then
-			if not Players:GetPlayerFromCharacter(m) then m:Destroy(); count += 1 end
+			if not Players:GetPlayerFromCharacter(m) then m:Destroy(); count = count + 1 end
 		end
 	end
 	notify("Removed " .. count .. " NPCs", "success")
@@ -2125,7 +2413,7 @@ createButton(wldSubs["Parts"], "Explode All Parts",
 			bv.MaxForce = Vector3.new(1e5,1e5,1e5)
 			bv.Velocity = Vector3.new(math.random(-200,200), math.random(100,400), math.random(-200,200))
 			game:GetService("Debris"):AddItem(bv, 1)
-			count += 1
+			count = count + 1
 		end
 	end
 	notify("Launched " .. count .. " parts", "success")
@@ -2152,6 +2440,7 @@ divider(setPage)
 createToggle(setPage, "Light Theme", "Switch between dark and light colour palette", function(on)
 	tween(main,    {BackgroundColor3 = on and Color3.fromRGB(235,235,240) or T.BG}, 0.3)
 	tween(sidebar, {BackgroundColor3 = on and Color3.fromRGB(220,220,228) or T.SURFACE}, 0.3)
+	until true
 end)
 divider(setPage)
 
