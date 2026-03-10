@@ -1822,10 +1822,10 @@ local desSubs = createSubTabs(desPage, {"Aim", "Melee", "Defense", "Utility"})
 sectionLabel(desSubs["Aim"], "Aim Assistance", T.DANGER)
 divider(desSubs["Aim"])
 
-createToggle(desSubs["Aim"], "Aimbot", "Hold RMB to snap camera to nearest enemy", function(on)
+createToggle(desSubs["Aim"], "Aimbot", "Hold LMB to snap camera to nearest enemy", function(on)
 	if on then
 		RunService:BindToRenderStep("AimbotUpdate", Enum.RenderPriority.Camera.Value+1, function()
-			if not UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then return end
+			if not UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then return end
 			local cam = workspace.CurrentCamera
 			local best, bestDist = nil, math.huge
 			local cx, cy = cam.ViewportSize.X/2, cam.ViewportSize.Y/2
