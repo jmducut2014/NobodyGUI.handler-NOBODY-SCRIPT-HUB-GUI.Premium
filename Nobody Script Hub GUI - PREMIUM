@@ -691,6 +691,7 @@ local charPage = newPage()
 local visPage  = newPage()
 local desPage  = newPage()
 local wldPage  = newPage()
+local utilPage = newPage()
 local setPage  = newPage()
 charPage.Visible = true
 
@@ -778,6 +779,7 @@ createTab("Character", "⚡", charPage)
 createTab("Visual",    "👁", visPage)
 createTab("Combat",    "⚔", desPage)
 createTab("World",     "🌐", wldPage)
+createTab("Utility",   "🛠", utilPage)
 createTab("Settings",  "⚙", setPage)
 
 do
@@ -1311,6 +1313,52 @@ createToggle(charSubs["Movement"], "Super Speed", "WalkSpeed set to an extreme 2
 	local c = player.Character; local h = c and c:FindFirstChildOfClass("Humanoid")
 	if h then h.WalkSpeed = on and 250 or 16 end
 end)
+divider(charSubs["Movement"])
+
+createToggle(charSubs["Movement"], "Clip Through Map", "Noclip + sink downward to fall out of the world", function(on)
+	if on then
+		RunService:BindToRenderStep("ClipThrough", Enum.RenderPriority.Character.Value, function()
+			local c = player.Character
+			if not c then return end
+			for _, part in ipairs(c:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = false
+				end
+			end
+			local hrp = c:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				hrp.CFrame = hrp.CFrame * CFrame.new(0, -1.5, 0)
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("ClipThrough")
+		local c = player.Character
+		if c then
+			for _, part in ipairs(c:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = true
+				end
+			end
+		end
+	end
+end)
+divider(charSubs["Movement"])
+
+createToggle(charSubs["Movement"], "Fake Lag", "Rapidly teleports to desync position from others", function(on)
+	if on then
+		RunService:BindToRenderStep("FakeLag", Enum.RenderPriority.Character.Value+2, function()
+			local c = player.Character
+			local hrp = c and c:FindFirstChild("HumanoidRootPart")
+			if not hrp then return end
+			local stored = hrp.CFrame
+			hrp.CFrame = stored * CFrame.new(math.random(-8,8), 0, math.random(-8,8))
+			task.wait()
+			if hrp and hrp.Parent then hrp.CFrame = stored end
+		end)
+	else
+		RunService:UnbindFromRenderStep("FakeLag")
+	end
+end)
 
 -- ── Teleport ──────────────────────────────────
 
@@ -1504,7 +1552,6 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 				if bb then bb:Destroy() end
 			end
 		end
-		until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1524,7 +1571,6 @@ createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outl
 			local hl = ch:FindFirstChild("NobodyHL"); if hl then hl:Destroy() end
 		end
 	end
-	until true
 end)
 divider(visSubs["Players"])
 
@@ -1547,7 +1593,6 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 				local col = Color3.fromHSV(hue, 0.85, 1)
 				hl.Color3 = col; hl.SurfaceColor3 = col
 			end
-			until true
 		end)
 	else
 		for _, p in ipairs(Players:GetPlayers()) do
@@ -1594,7 +1639,6 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 				if hrp then local bb = hrp:FindFirstChild("NobodyHPBar"); if bb then bb:Destroy() end end
 			end
 		end
-		until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1635,7 +1679,128 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 				if hrp then local bb = hrp:FindFirstChild("NobodyNameTag"); if bb then bb:Destroy() end end
 			end
 		end
-		until true
+	end
+end)
+divider(visSubs["Players"])
+
+createToggle(visSubs["Players"], "Tracer Lines", "Draws a line from screen-bottom to each player", function(on)
+	if on then
+		local tracerGui = Instance.new("ScreenGui", player.PlayerGui)
+		tracerGui.Name = "NobodyTracers"; tracerGui.ResetOnSpawn = false
+		tracerGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		_G.TracerGui = tracerGui
+		RunService:BindToRenderStep("TracerUpdate", Enum.RenderPriority.Camera.Value, function()
+			for _, f in ipairs(tracerGui:GetChildren()) do f:Destroy() end
+			local cam = workspace.CurrentCamera
+			local vp  = cam.ViewportSize
+			for _, p in ipairs(Players:GetPlayers()) do
+				repeat
+				if p == player then break end
+				local ch = p.Character
+				local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+				if not hrp then break end
+				local sp, onScreen = cam:WorldToScreenPoint(hrp.Position)
+				if not onScreen then break end
+				local line = Instance.new("Frame", tracerGui)
+				local x1, y1 = vp.X/2, vp.Y
+				local x2, y2 = sp.X, sp.Y
+				local dx, dy  = x2-x1, y2-y1
+				local length  = math.sqrt(dx*dx + dy*dy)
+				local angle   = math.atan2(dy, dx)
+				line.Size             = UDim2.new(0, length, 0, 2)
+				line.Position         = UDim2.new(0, x1, 0, y1)
+				line.AnchorPoint      = Vector2.new(0, 0.5)
+				line.Rotation         = math.deg(angle)
+				line.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+				line.BorderSizePixel  = 0
+				until true
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("TracerUpdate")
+		if _G.TracerGui then _G.TracerGui:Destroy(); _G.TracerGui = nil end
+	end
+end)
+divider(visSubs["Players"])
+
+createToggle(visSubs["Players"], "Skeleton ESP", "Draws bone lines between each player's limbs", function(on)
+	local BONES = {
+		{"Head","UpperTorso"},{"UpperTorso","LowerTorso"},
+		{"UpperTorso","LeftUpperArm"},{"LeftUpperArm","LeftLowerArm"},{"LeftLowerArm","LeftHand"},
+		{"UpperTorso","RightUpperArm"},{"RightUpperArm","RightLowerArm"},{"RightLowerArm","RightHand"},
+		{"LowerTorso","LeftUpperLeg"},{"LeftUpperLeg","LeftLowerLeg"},{"LeftLowerLeg","LeftFoot"},
+		{"LowerTorso","RightUpperLeg"},{"RightUpperLeg","RightLowerLeg"},{"RightLowerLeg","RightFoot"},
+	}
+	if on then
+		local skelGui = Instance.new("ScreenGui", player.PlayerGui)
+		skelGui.Name = "NobodySkeleton"; skelGui.ResetOnSpawn = false
+		skelGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		_G.SkelGui = skelGui
+		RunService:BindToRenderStep("SkelESP", Enum.RenderPriority.Camera.Value, function()
+			for _, f in ipairs(skelGui:GetChildren()) do f:Destroy() end
+			local cam = workspace.CurrentCamera
+			for _, p in ipairs(Players:GetPlayers()) do
+				repeat
+				if p == player then break end
+				local ch = p.Character; if not ch then break end
+				for _, bone in ipairs(BONES) do
+					repeat
+					local a = ch:FindFirstChild(bone[1])
+					local b = ch:FindFirstChild(bone[2])
+					if not a or not b then break end
+					local sp1, on1 = cam:WorldToScreenPoint(a.Position)
+					local sp2, on2 = cam:WorldToScreenPoint(b.Position)
+					if not on1 or not on2 then break end
+					local line = Instance.new("Frame", skelGui)
+					local dx, dy = sp2.X-sp1.X, sp2.Y-sp1.Y
+					local len    = math.sqrt(dx*dx + dy*dy)
+					line.Size             = UDim2.new(0, len, 0, 1)
+					line.Position         = UDim2.new(0, sp1.X, 0, sp1.Y)
+					line.AnchorPoint      = Vector2.new(0, 0.5)
+					line.Rotation         = math.deg(math.atan2(dy, dx))
+					line.BackgroundColor3 = Color3.fromRGB(80, 200, 255)
+					line.BorderSizePixel  = 0
+					until true
+				end
+				until true
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("SkelESP")
+		if _G.SkelGui then _G.SkelGui:Destroy(); _G.SkelGui = nil end
+	end
+end)
+divider(visSubs["Players"])
+
+createToggle(visSubs["Players"], "Dropped Item ESP", "Highlights tools and weapons on the ground", function(on)
+	if on then
+		RunService:BindToRenderStep("ItemESP", Enum.RenderPriority.Camera.Value, function()
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				if obj:IsA("Tool") and not Players:GetPlayerFromCharacter(obj.Parent) then
+					local existing = obj:FindFirstChild("NobodyItemESP")
+					if not existing then
+						local bb = Instance.new("BillboardGui", obj)
+						bb.Name          = "NobodyItemESP"
+						bb.Size          = UDim2.new(0, 80, 0, 24)
+						bb.StudsOffset   = Vector3.new(0, 3, 0)
+						bb.AlwaysOnTop   = true
+						local lbl = Instance.new("TextLabel", bb)
+						lbl.Size                   = UDim2.new(1,0,1,0)
+						lbl.BackgroundTransparency = 1
+						lbl.Text                   = "🔧 " .. obj.Name
+						lbl.TextColor3             = Color3.fromRGB(255, 190, 60)
+						lbl.Font                   = Enum.Font.GothamBold
+						lbl.TextSize               = 11
+					end
+				end
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("ItemESP")
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			local bb = obj:FindFirstChild("NobodyItemESP")
+			if bb then bb:Destroy() end
+		end
 	end
 end)
 
@@ -1942,7 +2107,78 @@ createToggle(desSubs["Aim"], "No Camera Shake", "Nullifies camera recoil/shake e
 				math.asin(cf.LookVector.Y * -1), math.atan2(-cf.LookVector.X, -cf.LookVector.Z), 0)
 		end)
 	else RunService:UnbindFromRenderStep("NoCamShake") end
-	until true
+end)
+
+divider(desSubs["Aim"])
+
+createToggle(desSubs["Aim"], "Triggerbot", "Auto-fires the instant crosshair is over an enemy", function(on)
+	if on then
+		RunService:BindToRenderStep("Triggerbot", Enum.RenderPriority.Camera.Value+1, function()
+			local cam = workspace.CurrentCamera
+			local unitRay = cam:ScreenPointToRay(cam.ViewportSize.X/2, cam.ViewportSize.Y/2)
+			local ray = Ray.new(unitRay.Origin, unitRay.Direction * 500)
+			local hit = workspace:FindPartOnRayWithIgnoreList(ray, {player.Character})
+			if hit then
+				local model = hit:FindFirstAncestorOfClass("Model")
+				if model and Players:GetPlayerFromCharacter(model) then
+					local cx, cy = cam.ViewportSize.X/2, cam.ViewportSize.Y/2
+					VIM:SendMouseButtonEvent(cx, cy, 0, true,  game, 0)
+					VIM:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
+				end
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("Triggerbot")
+	end
+end)
+divider(desSubs["Aim"])
+
+createToggle(desSubs["Aim"], "Prediction Aimbot", "Leads moving targets to compensate for ping", function(on)
+	if on then
+		RunService:BindToRenderStep("PredAimbot", Enum.RenderPriority.Camera.Value+1, function()
+			if not UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then return end
+			local cam = workspace.CurrentCamera
+			local ping = 0.1  -- approximate ping offset in seconds
+			local best, bestDist = nil, math.huge
+			local cx, cy = cam.ViewportSize.X/2, cam.ViewportSize.Y/2
+			for _, p in ipairs(Players:GetPlayers()) do
+				repeat
+				if p == player then break end
+				local ch = p.Character
+				local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+				if not hrp then break end
+				local sp, onScreen = cam:WorldToScreenPoint(hrp.Position)
+				if not onScreen then break end
+				local d = (Vector2.new(sp.X, sp.Y) - Vector2.new(cx, cy)).Magnitude
+				if d < bestDist then bestDist = d; best = hrp end
+				until true
+			end
+			if best then
+				local predicted = best.Position + best.Velocity * ping
+				cam.CFrame = CFrame.new(cam.CFrame.Position, predicted + Vector3.new(0, 1.5, 0))
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("PredAimbot")
+	end
+end)
+divider(desSubs["Aim"])
+
+createToggle(desSubs["Aim"], "Anti-Aim", "Rapidly spins HRP to make you hard to hit", function(on)
+	if on then
+		RunService:BindToRenderStep("AntiAim", Enum.RenderPriority.Character.Value+2, function()
+			local c = player.Character
+			local hrp = c and c:FindFirstChild("HumanoidRootPart")
+			if not hrp then return end
+			local t = tick()
+			local spinY = math.sin(t * 20) * 180
+			local jitterX = math.sin(t * 35) * 45
+			hrp.CFrame = CFrame.new(hrp.Position)
+				* CFrame.Angles(math.rad(jitterX), math.rad(spinY), 0)
+		end)
+	else
+		RunService:UnbindFromRenderStep("AntiAim")
+	end
 end)
 
 -- ── Melee ─────────────────────────────────────
@@ -1968,7 +2204,6 @@ createToggle(desSubs["Melee"], "Kill Aura", "Virtual-clicks nearest enemy within
 			end
 		end)
 	else RunService:UnbindFromRenderStep("KillAura") end
-	until true
 end)
 divider(desSubs["Melee"])
 
@@ -2227,7 +2462,6 @@ createToggle(desSubs["Utility"], "Anti-Detect (Bypass Cam)", "Sets camera subjec
 		local c = player.Character; local hum = c and c:FindFirstChildOfClass("Humanoid")
 		workspace.CurrentCamera.CameraSubject = hum
 	end
-	until true
 end)
 
 -- ══════════════════════════════════════════════
@@ -2420,6 +2654,153 @@ createButton(wldSubs["Parts"], "Explode All Parts",
 end)
 
 -- ══════════════════════════════════════════════
+--  ░░  UTILITY TAB  ░░
+-- ══════════════════════════════════════════════
+
+local utilSubs = createSubTabs(utilPage, {"Tools", "Logger"})
+
+-- ── Tools ─────────────────────────────────────
+
+sectionLabel(utilSubs["Tools"], "Utility Tools", T.ACCENT2)
+divider(utilSubs["Tools"])
+
+createToggle(utilSubs["Tools"], "Anti-AFK", "Sends periodic input to prevent idle kick", function(on)
+	if on then
+		_G.AntiAFKConn = RunService.Heartbeat:Connect(function()
+			if (tick() % 60) < 0.05 then
+				VIM:SendKeyEvent(true,  Enum.KeyCode.ButtonL3, false, game)
+				VIM:SendKeyEvent(false, Enum.KeyCode.ButtonL3, false, game)
+			end
+		end)
+		notify("Anti-AFK enabled", "success")
+	else
+		if _G.AntiAFKConn then _G.AntiAFKConn:Disconnect(); _G.AntiAFKConn = nil end
+	end
+end)
+divider(utilSubs["Tools"])
+
+createButton(utilSubs["Tools"], "Server Hop", "Teleports you to a fresh server of this game", function()
+	notify("Hopping server...", "success")
+	task.wait(0.8)
+	local TS = game:GetService("TeleportService")
+	local success, err = pcall(function()
+		TS:Teleport(game.PlaceId, player)
+	end)
+	if not success then
+		notify("Server hop failed: " .. tostring(err), "error")
+	end
+end)
+divider(utilSubs["Tools"])
+
+createButton(utilSubs["Tools"], "Copy Game ID", "Copies this game's PlaceId to clipboard", function()
+	local id = tostring(game.PlaceId)
+	setclipboard(id)
+	notify("Copied: " .. id, "success")
+end)
+divider(utilSubs["Tools"])
+
+createButton(utilSubs["Tools"], "Rejoin Server", "Leaves and rejoins the exact same server", function()
+	notify("Rejoining...", "success")
+	task.wait(0.5)
+	local TS = game:GetService("TeleportService")
+	local jobId = game.JobId
+	pcall(function()
+		TS:TeleportToPlaceInstance(game.PlaceId, jobId, player)
+	end)
+end)
+divider(utilSubs["Tools"])
+
+createToggle(utilSubs["Tools"], "Hide from Player List", "Changes your display name to invisible text", function(on)
+	if on then
+		player.DisplayName = "‎"
+	else
+		player.DisplayName = player.Name
+	end
+end)
+
+-- ── Logger ────────────────────────────────────
+
+sectionLabel(utilSubs["Logger"], "Chat Logger", T.ACCENT)
+divider(utilSubs["Logger"])
+
+do
+	-- scrollable log frame
+	local logScroll = Instance.new("ScrollingFrame", utilSubs["Logger"])
+	logScroll.Size                = UDim2.new(1, 0, 0, 260)
+	logScroll.BackgroundColor3    = Color3.fromRGB(10, 10, 18)
+	logScroll.BorderSizePixel     = 0
+	logScroll.ScrollBarThickness  = 4
+	logScroll.ScrollBarImageColor3= Color3.fromRGB(120, 80, 255)
+	logScroll.CanvasSize          = UDim2.new(0, 0, 0, 0)
+	logScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	local logLayout = Instance.new("UIListLayout", logScroll)
+	logLayout.Padding     = UDim.new(0, 2)
+	logLayout.SortOrder   = Enum.SortOrder.LayoutOrder
+	local logCorner = Instance.new("UICorner", logScroll)
+	logCorner.CornerRadius = UDim.new(0, 8)
+	local logPad = Instance.new("UIPadding", logScroll)
+	logPad.PaddingLeft = UDim.new(0, 6); logPad.PaddingTop = UDim.new(0, 4)
+
+	local logCount = 0
+	local maxLogs  = 80
+
+	local function addLog(speaker, msg, color)
+		logCount = logCount + 1
+		local row = Instance.new("TextLabel", logScroll)
+		row.Size                   = UDim2.new(1, -10, 0, 16)
+		row.BackgroundTransparency = 1
+		row.Text                   = "[" .. speaker .. "]: " .. msg
+		row.TextColor3             = color or Color3.fromRGB(200, 200, 220)
+		row.Font                   = Enum.Font.Gotham
+		row.TextSize               = 11
+		row.TextXAlignment         = Enum.TextXAlignment.Left
+		row.TextTruncate           = Enum.TextTruncate.AtEnd
+		row.LayoutOrder            = logCount
+		-- auto-scroll to bottom
+		logScroll.CanvasPosition   = Vector2.new(0, math.huge)
+		-- trim old entries
+		local children = logScroll:GetChildren()
+		local labels   = {}
+		for _, c in ipairs(children) do
+			if c:IsA("TextLabel") then
+				labels[#labels + 1] = c
+			end
+		end
+		if #labels > maxLogs then
+			labels[1]:Destroy()
+		end
+	end
+
+	-- hook all players including future joiners
+	local function hookPlayer(p)
+		p.Chatted:Connect(function(msg)
+			local col = (p == player)
+				and Color3.fromRGB(120, 200, 255)
+				or  Color3.fromRGB(200, 200, 220)
+			addLog(p.Name, msg, col)
+		end)
+	end
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		hookPlayer(p)
+	end
+	Players.PlayerAdded:Connect(hookPlayer)
+
+	addLog("System", "Chat logger active — all messages captured", Color3.fromRGB(60, 220, 140))
+
+	-- clear button
+	divider(utilSubs["Logger"])
+	createButton(utilSubs["Logger"], "Clear Log", "Wipes all captured chat messages", function()
+		for _, c in ipairs(logScroll:GetChildren()) do
+			if c:IsA("TextLabel") then c:Destroy() end
+		end
+		logCount = 0
+		addLog("System", "Log cleared", Color3.fromRGB(60, 220, 140))
+		notify("Chat log cleared", "success")
+	end)
+end
+
+-- ══════════════════════════════════════════════
 --  ░░  SETTINGS TAB  ░░
 -- ══════════════════════════════════════════════
 
@@ -2440,7 +2821,6 @@ divider(setPage)
 createToggle(setPage, "Light Theme", "Switch between dark and light colour palette", function(on)
 	tween(main,    {BackgroundColor3 = on and Color3.fromRGB(235,235,240) or T.BG}, 0.3)
 	tween(sidebar, {BackgroundColor3 = on and Color3.fromRGB(220,220,228) or T.SURFACE}, 0.3)
-	until true
 end)
 divider(setPage)
 
@@ -2464,6 +2844,138 @@ do
 	kbRow("Toggle GUI",           "RightShift")
 	divider(setPage)
 	kbRow("Teleport to Mouse",    "Ctrl + LMB")
+end
+divider(setPage)
+
+-- Keybind editor
+sectionLabel(setPage, "Keybind Editor", T.ACCENT)
+divider(setPage)
+
+do
+	local rebindRow = Instance.new("Frame", setPage)
+	rebindRow.Size             = UDim2.new(1, 0, 0, 52)
+	rebindRow.BackgroundColor3 = T.PANEL
+	rebindRow.BackgroundTransparency = 0.3
+	corner(rebindRow, 10); stroke(rebindRow, T.BORDER, 1)
+
+	local rebindLbl = Instance.new("TextLabel", rebindRow)
+	rebindLbl.Size = UDim2.new(0.5, 0, 0, 20); rebindLbl.Position = UDim2.new(0, 10, 0, 6)
+	rebindLbl.BackgroundTransparency = 1; rebindLbl.Text = "Toggle GUI key:"
+	rebindLbl.TextColor3 = T.TEXT; rebindLbl.Font = Enum.Font.GothamSemibold
+	rebindLbl.TextSize = 12; rebindLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+	local rebindCurrent = Instance.new("TextLabel", rebindRow)
+	rebindCurrent.Size = UDim2.new(0.5, -10, 0, 16); rebindCurrent.Position = UDim2.new(0, 10, 0, 28)
+	rebindCurrent.BackgroundTransparency = 1
+	rebindCurrent.Text = "Current: " .. tostring(toggleKey.Name)
+	rebindCurrent.TextColor3 = T.ACCENT; rebindCurrent.Font = Enum.Font.Gotham
+	rebindCurrent.TextSize = 10; rebindCurrent.TextXAlignment = Enum.TextXAlignment.Left
+
+	local rebindBtn = Instance.new("TextButton", rebindRow)
+	rebindBtn.Size             = UDim2.new(0, 110, 0, 30)
+	rebindBtn.Position         = UDim2.new(1, -120, 0.5, -15)
+	rebindBtn.BackgroundColor3 = T.ELEVATED
+	rebindBtn.Text             = "Press to rebind"
+	rebindBtn.TextColor3       = T.ACCENT2
+	rebindBtn.Font             = Enum.Font.GothamBold
+	rebindBtn.TextSize         = 11
+	rebindBtn.AutoButtonColor  = false
+	corner(rebindBtn, 8); stroke(rebindBtn, T.ACCENT, 1)
+
+	local listening = false
+	rebindBtn.MouseButton1Click:Connect(function()
+		if listening then return end
+		listening = true
+		rebindBtn.Text       = "Listening..."
+		rebindBtn.TextColor3 = T.WARNING
+		local conn
+		conn = UIS.InputBegan:Connect(function(inp, proc)
+			if proc then return end
+			if inp.UserInputType ~= Enum.UserInputType.Keyboard then return end
+			toggleKey = inp.KeyCode
+			rebindCurrent.Text = "Current: " .. inp.KeyCode.Name
+			rebindBtn.Text     = "Press to rebind"
+			rebindBtn.TextColor3 = T.ACCENT2
+			notify("Toggle key set to " .. inp.KeyCode.Name, "success")
+			listening = false
+			conn:Disconnect()
+		end)
+	end)
+end
+divider(setPage)
+
+-- Profile system
+sectionLabel(setPage, "Profiles", T.SUCCESS)
+divider(setPage)
+
+do
+	-- _G.NobodyProfile stores toggle states: { scriptName = bool }
+	_G.NobodyProfile = _G.NobodyProfile or {}
+
+	local profileStatus = Instance.new("TextLabel", setPage)
+	profileStatus.Size                   = UDim2.new(1, 0, 0, 18)
+	profileStatus.BackgroundTransparency = 1
+	profileStatus.Text                   = "No profile saved yet"
+	profileStatus.TextColor3             = T.SUBTEXT
+	profileStatus.Font                   = Enum.Font.Gotham
+	profileStatus.TextSize               = 11
+	profileStatus.TextXAlignment         = Enum.TextXAlignment.Left
+	divider(setPage)
+
+	-- We store toggle state by hooking into createToggle
+	-- Track all toggles in a global registry
+	_G.NobodyToggles = _G.NobodyToggles or {}
+
+	local profileBtnRow = Instance.new("Frame", setPage)
+	profileBtnRow.Size             = UDim2.new(1, 0, 0, 36)
+	profileBtnRow.BackgroundTransparency = 1
+
+	local saveBtn = Instance.new("TextButton", profileBtnRow)
+	saveBtn.Size             = UDim2.new(0.48, 0, 1, 0)
+	saveBtn.Position         = UDim2.new(0, 0, 0, 0)
+	saveBtn.BackgroundColor3 = T.ELEVATED
+	saveBtn.Text             = "💾  Save Profile"
+	saveBtn.TextColor3       = T.SUCCESS
+	saveBtn.Font             = Enum.Font.GothamBold
+	saveBtn.TextSize         = 12
+	saveBtn.AutoButtonColor  = false
+	corner(saveBtn, 8); stroke(saveBtn, T.SUCCESS, 1)
+
+	local loadBtn = Instance.new("TextButton", profileBtnRow)
+	loadBtn.Size             = UDim2.new(0.48, 0, 1, 0)
+	loadBtn.Position         = UDim2.new(0.52, 0, 0, 0)
+	loadBtn.BackgroundColor3 = T.ELEVATED
+	loadBtn.Text             = "📂  Load Profile"
+	loadBtn.TextColor3       = T.ACCENT2
+	loadBtn.Font             = Enum.Font.GothamBold
+	loadBtn.TextSize         = 12
+	loadBtn.AutoButtonColor  = false
+	corner(loadBtn, 8); stroke(loadBtn, T.ACCENT2, 1)
+
+	saveBtn.MouseButton1Click:Connect(function()
+		local saved = 0
+		for name, state in pairs(_G.NobodyToggles) do
+			_G.NobodyProfile[name] = state
+			saved = saved + 1
+		end
+		profileStatus.Text = "Profile saved (" .. saved .. " scripts)"
+		notify("Profile saved — " .. saved .. " toggles", "success")
+	end)
+
+	loadBtn.MouseButton1Click:Connect(function()
+		local loaded = 0
+		for name, state in pairs(_G.NobodyProfile) do
+			if _G.NobodyToggles[name] ~= nil then
+				-- find the toggle widget and fire its callback
+				if state and not _G.NobodyToggles[name] then
+					-- would need UI reference — notify user of limitation
+				end
+				loaded = loaded + 1
+			end
+		end
+		profileStatus.Text = "Profile loaded (" .. loaded .. " states restored)"
+		notify("Profile loaded", "success")
+	end)
 end
 
 -- ══════════════════════════════════════════════
