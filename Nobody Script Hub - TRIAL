@@ -1547,7 +1547,7 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 	if on then
 		RunService:BindToRenderStep("ESPUpdate", Enum.RenderPriority.Camera.Value+1, function()
 			for _, tgt in ipairs(Players:GetPlayers()) do
-					repeat
+				repeat
 				if tgt == player then break end
 				local ch = tgt.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
@@ -1572,6 +1572,7 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 					lbl.Text = tgt.Name .. "\n❤ " .. math.floor(hum.Health) .. "  📍 " .. dist .. "m"
 					lbl.TextColor3 = Color3.fromHSV(hum.Health/hum.MaxHealth * 0.33, 0.9, 1)
 				end
+				until true
 			end
 		end)
 	else
@@ -1583,7 +1584,6 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 				if bb then bb:Destroy() end
 			end
 		end
-					until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1591,7 +1591,7 @@ divider(visSubs["Players"])
 createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outline through walls", function(on)
 	_G.HLEnabled = on
 	for _, p in ipairs(Players:GetPlayers()) do
-			repeat
+		repeat
 		if p == player then break end
 		local ch = p.Character; if not ch then break end
 		if on then
@@ -1602,8 +1602,8 @@ createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outl
 		else
 			local hl = ch:FindFirstChild("NobodyHL"); if hl then hl:Destroy() end
 		end
+		until true
 	end
-			until true
 end)
 divider(visSubs["Players"])
 
@@ -1614,7 +1614,7 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 			if not _G.RainbowHLOn then RunService:UnbindFromRenderStep("RainbowHL"); return end
 			local hue = tick() * 0.2 % 1
 			for _, p in ipairs(Players:GetPlayers()) do
-					repeat
+				repeat
 				if p == player then break end
 				local ch = p.Character; if not ch then break end
 				local hl = ch:FindFirstChild("NobodyRL")
@@ -1625,8 +1625,8 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 				end
 				local col = Color3.fromHSV(hue, 0.85, 1)
 				hl.Color3 = col; hl.SurfaceColor3 = col
+				until true
 			end
-					until true
 		end)
 	else
 		for _, p in ipairs(Players:GetPlayers()) do
@@ -1642,7 +1642,7 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 	if on then
 		RunService:BindToRenderStep("HealthBarUpdate", Enum.RenderPriority.Camera.Value+1, function()
 			for _, p in ipairs(Players:GetPlayers()) do
-					repeat
+				repeat
 				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
@@ -1663,6 +1663,7 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 					fill.Size = UDim2.new(pct, 0, 1, 0)
 					fill.BackgroundColor3 = Color3.fromHSV(pct * 0.33, 0.9, 1)
 				end
+				until true
 			end
 		end)
 	else
@@ -1673,7 +1674,6 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 				if hrp then local bb = hrp:FindFirstChild("NobodyHPBar"); if bb then bb:Destroy() end end
 			end
 		end
-					until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1684,7 +1684,7 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 			local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if not myHRP then return end
 			for _, p in ipairs(Players:GetPlayers()) do
-					repeat
+				repeat
 				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				if not hrp then break end
@@ -1704,6 +1704,7 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 					local d = math.floor((hrp.Position - myHRP.Position).Magnitude)
 					lbl.Text = p.Name .. "  [" .. d .. "m]"
 				end
+				until true
 			end
 		end)
 	else
@@ -1714,76 +1715,130 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 				if hrp then local bb = hrp:FindFirstChild("NobodyNameTag"); if bb then bb:Destroy() end end
 			end
 		end
-					until true
 	end
 end)
+divider(visSubs["Players"])
 
+createToggle(visSubs["Players"], "Tracer Lines", "Draws a line from screen-bottom to each player", function(on)
+	if on then
+		local tracerGui = Instance.new("ScreenGui", player.PlayerGui)
+		tracerGui.Name = "NobodyTracers"; tracerGui.ResetOnSpawn = false
+		tracerGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		_G.TracerGui = tracerGui
+		RunService:BindToRenderStep("TracerUpdate", Enum.RenderPriority.Camera.Value, function()
+			for _, f in ipairs(tracerGui:GetChildren()) do f:Destroy() end
+			local cam = workspace.CurrentCamera
+			local vp  = cam.ViewportSize
+			for _, p in ipairs(Players:GetPlayers()) do
+				repeat
+				if p == player then break end
+				local ch = p.Character
+				local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+				if not hrp then break end
+				local sp, onScreen = cam:WorldToScreenPoint(hrp.Position)
+				if not onScreen then break end
+				local line = Instance.new("Frame", tracerGui)
+				local x1, y1 = vp.X/2, vp.Y
+				local x2, y2 = sp.X, sp.Y
+				local dx, dy  = x2-x1, y2-y1
+				local length  = math.sqrt(dx*dx + dy*dy)
+				local angle   = math.atan2(dy, dx)
+				line.Size             = UDim2.new(0, length, 0, 2)
+				line.Position         = UDim2.new(0, x1, 0, y1)
+				line.AnchorPoint      = Vector2.new(0, 0.5)
+				line.Rotation         = math.deg(angle)
+				line.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+				line.BorderSizePixel  = 0
+				until true
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("TracerUpdate")
+		if _G.TracerGui then _G.TracerGui:Destroy(); _G.TracerGui = nil end
+	end
+end)
 divider(visSubs["Players"])
-do
-	local _lr = Instance.new("Frame", visSubs["Players"])
-	_lr.Size             = UDim2.new(1, 0, 0, 52)
-	_lr.BackgroundColor3 = T.PANEL
-	_lr.BackgroundTransparency = 0.55
-	corner(_lr, 10); stroke(_lr, T.MUTED, 1)
-	local _li = Instance.new("TextLabel", _lr)
-	_li.Size = UDim2.new(0,28,1,0); _li.Position = UDim2.new(0,10,0,0)
-	_li.BackgroundTransparency = 1; _li.Text = "🔒"
-	_li.TextSize = 16; _li.Font = Enum.Font.GothamBold
-	local _lt = Instance.new("TextLabel", _lr)
-	_lt.Size = UDim2.new(1,-50,0,20); _lt.Position = UDim2.new(0,42,0,8)
-	_lt.BackgroundTransparency = 1; _lt.Text = "Tracer Lines — Full Version only"
-	_lt.TextColor3 = T.MUTED; _lt.Font = Enum.Font.GothamSemibold; _lt.TextSize = 12
-	_lt.TextXAlignment = Enum.TextXAlignment.Left
-	local _ls = Instance.new("TextLabel", _lr)
-	_ls.Size = UDim2.new(1,-50,0,16); _ls.Position = UDim2.new(0,42,0,30)
-	_ls.BackgroundTransparency = 1; _ls.Text = "Screen-space lines drawn to every player"
-	_ls.TextColor3 = T.MUTED; _ls.Font = Enum.Font.Gotham; _ls.TextSize = 10
-	_ls.TextXAlignment = Enum.TextXAlignment.Left
-end
+
+createToggle(visSubs["Players"], "Skeleton ESP", "Draws bone lines between each player's limbs", function(on)
+	local BONES = {
+		{"Head","UpperTorso"},{"UpperTorso","LowerTorso"},
+		{"UpperTorso","LeftUpperArm"},{"LeftUpperArm","LeftLowerArm"},{"LeftLowerArm","LeftHand"},
+		{"UpperTorso","RightUpperArm"},{"RightUpperArm","RightLowerArm"},{"RightLowerArm","RightHand"},
+		{"LowerTorso","LeftUpperLeg"},{"LeftUpperLeg","LeftLowerLeg"},{"LeftLowerLeg","LeftFoot"},
+		{"LowerTorso","RightUpperLeg"},{"RightUpperLeg","RightLowerLeg"},{"RightLowerLeg","RightFoot"},
+	}
+	if on then
+		local skelGui = Instance.new("ScreenGui", player.PlayerGui)
+		skelGui.Name = "NobodySkeleton"; skelGui.ResetOnSpawn = false
+		skelGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		_G.SkelGui = skelGui
+		RunService:BindToRenderStep("SkelESP", Enum.RenderPriority.Camera.Value, function()
+			for _, f in ipairs(skelGui:GetChildren()) do f:Destroy() end
+			local cam = workspace.CurrentCamera
+			for _, p in ipairs(Players:GetPlayers()) do
+				repeat
+				if p == player then break end
+				local ch = p.Character; if not ch then break end
+				for _, bone in ipairs(BONES) do
+					repeat
+					local a = ch:FindFirstChild(bone[1])
+					local b = ch:FindFirstChild(bone[2])
+					if not a or not b then break end
+					local sp1, on1 = cam:WorldToScreenPoint(a.Position)
+					local sp2, on2 = cam:WorldToScreenPoint(b.Position)
+					if not on1 or not on2 then break end
+					local line = Instance.new("Frame", skelGui)
+					local dx, dy = sp2.X-sp1.X, sp2.Y-sp1.Y
+					local len    = math.sqrt(dx*dx + dy*dy)
+					line.Size             = UDim2.new(0, len, 0, 1)
+					line.Position         = UDim2.new(0, sp1.X, 0, sp1.Y)
+					line.AnchorPoint      = Vector2.new(0, 0.5)
+					line.Rotation         = math.deg(math.atan2(dy, dx))
+					line.BackgroundColor3 = Color3.fromRGB(80, 200, 255)
+					line.BorderSizePixel  = 0
+					until true
+				end
+				until true
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("SkelESP")
+		if _G.SkelGui then _G.SkelGui:Destroy(); _G.SkelGui = nil end
+	end
+end)
 divider(visSubs["Players"])
-do
-	local _lr = Instance.new("Frame", visSubs["Players"])
-	_lr.Size             = UDim2.new(1, 0, 0, 52)
-	_lr.BackgroundColor3 = T.PANEL
-	_lr.BackgroundTransparency = 0.55
-	corner(_lr, 10); stroke(_lr, T.MUTED, 1)
-	local _li = Instance.new("TextLabel", _lr)
-	_li.Size = UDim2.new(0,28,1,0); _li.Position = UDim2.new(0,10,0,0)
-	_li.BackgroundTransparency = 1; _li.Text = "🔒"
-	_li.TextSize = 16; _li.Font = Enum.Font.GothamBold
-	local _lt = Instance.new("TextLabel", _lr)
-	_lt.Size = UDim2.new(1,-50,0,20); _lt.Position = UDim2.new(0,42,0,8)
-	_lt.BackgroundTransparency = 1; _lt.Text = "Skeleton ESP — Full Version only"
-	_lt.TextColor3 = T.MUTED; _lt.Font = Enum.Font.GothamSemibold; _lt.TextSize = 12
-	_lt.TextXAlignment = Enum.TextXAlignment.Left
-	local _ls = Instance.new("TextLabel", _lr)
-	_ls.Size = UDim2.new(1,-50,0,16); _ls.Position = UDim2.new(0,42,0,30)
-	_ls.BackgroundTransparency = 1; _ls.Text = "Bone lines drawn between each limb joint"
-	_ls.TextColor3 = T.MUTED; _ls.Font = Enum.Font.Gotham; _ls.TextSize = 10
-	_ls.TextXAlignment = Enum.TextXAlignment.Left
-end
-divider(visSubs["Players"])
-do
-	local _lr = Instance.new("Frame", visSubs["Players"])
-	_lr.Size             = UDim2.new(1, 0, 0, 52)
-	_lr.BackgroundColor3 = T.PANEL
-	_lr.BackgroundTransparency = 0.55
-	corner(_lr, 10); stroke(_lr, T.MUTED, 1)
-	local _li = Instance.new("TextLabel", _lr)
-	_li.Size = UDim2.new(0,28,1,0); _li.Position = UDim2.new(0,10,0,0)
-	_li.BackgroundTransparency = 1; _li.Text = "🔒"
-	_li.TextSize = 16; _li.Font = Enum.Font.GothamBold
-	local _lt = Instance.new("TextLabel", _lr)
-	_lt.Size = UDim2.new(1,-50,0,20); _lt.Position = UDim2.new(0,42,0,8)
-	_lt.BackgroundTransparency = 1; _lt.Text = "Dropped Item ESP — Full Version only"
-	_lt.TextColor3 = T.MUTED; _lt.Font = Enum.Font.GothamSemibold; _lt.TextSize = 12
-	_lt.TextXAlignment = Enum.TextXAlignment.Left
-	local _ls = Instance.new("TextLabel", _lr)
-	_ls.Size = UDim2.new(1,-50,0,16); _ls.Position = UDim2.new(0,42,0,30)
-	_ls.BackgroundTransparency = 1; _ls.Text = "Highlights tools and weapons on the ground"
-	_ls.TextColor3 = T.MUTED; _ls.Font = Enum.Font.Gotham; _ls.TextSize = 10
-	_ls.TextXAlignment = Enum.TextXAlignment.Left
-end
+
+createToggle(visSubs["Players"], "Dropped Item ESP", "Highlights tools and weapons on the ground", function(on)
+	if on then
+		RunService:BindToRenderStep("ItemESP", Enum.RenderPriority.Camera.Value, function()
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				if obj:IsA("Tool") and not Players:GetPlayerFromCharacter(obj.Parent) then
+					local existing = obj:FindFirstChild("NobodyItemESP")
+					if not existing then
+						local bb = Instance.new("BillboardGui", obj)
+						bb.Name          = "NobodyItemESP"
+						bb.Size          = UDim2.new(0, 80, 0, 24)
+						bb.StudsOffset   = Vector3.new(0, 3, 0)
+						bb.AlwaysOnTop   = true
+						local lbl = Instance.new("TextLabel", bb)
+						lbl.Size                   = UDim2.new(1,0,1,0)
+						lbl.BackgroundTransparency = 1
+						lbl.Text                   = "🔧 " .. obj.Name
+						lbl.TextColor3             = Color3.fromRGB(255, 190, 60)
+						lbl.Font                   = Enum.Font.GothamBold
+						lbl.TextSize               = 11
+					end
+				end
+			end
+		end)
+	else
+		RunService:UnbindFromRenderStep("ItemESP")
+		for _, obj in ipairs(workspace:GetDescendants()) do
+			local bb = obj:FindFirstChild("NobodyItemESP")
+			if bb then bb:Destroy() end
+		end
+	end
+end)
 
 -- ── World ─────────────────────────────────────
 
@@ -1977,7 +2032,7 @@ createToggle(desSubs["Aim"], "Aimbot", "Hold LMB to snap camera to nearest enemy
 			local best, bestDist = nil, math.huge
 			local cx, cy = cam.ViewportSize.X/2, cam.ViewportSize.Y/2
 			for _, p in ipairs(Players:GetPlayers()) do
-					repeat
+				repeat
 				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				if not hrp then break end
@@ -1985,7 +2040,7 @@ createToggle(desSubs["Aim"], "Aimbot", "Hold LMB to snap camera to nearest enemy
 				if not onScreen then break end
 				local d = (Vector2.new(sp.X, sp.Y) - Vector2.new(cx, cy)).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
-					until true
+				until true
 			end
 			if best then
 				cam.CFrame = CFrame.new(cam.CFrame.Position, best.Position + Vector3.new(0,1.5,0))
