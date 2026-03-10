@@ -1010,20 +1010,20 @@ createToggle(charSubs["Movement"], "Fly", "WASD + Space/LCtrl · camera-relative
 	if on then
 		local c = player.Character; local hrp = c and c:FindFirstChild("HumanoidRootPart")
 		if not hrp then return end
-		local bv = Instance.new("BodyVelocity", hrp); bv.MaxForce = Vector3.new(1e5,1e5,1e5); bv.Velocity = Vector3.zero
+		local bv = Instance.new("BodyVelocity", hrp); bv.MaxForce = Vector3.new(1e5,1e5,1e5); bv.Velocity = Vector3.new(0,0,0)
 		local bg = Instance.new("BodyGyro",     hrp); bg.MaxTorque = Vector3.new(1e5,1e5,1e5); bg.P = 1e4
 		RunService:BindToRenderStep("FlyUpdate", Enum.RenderPriority.Input.Value, function()
 			local cam = workspace.CurrentCamera
 			local cf  = cam.CFrame
 			local sp  = 60
-			local vel = Vector3.zero
+			local vel = Vector3.new(0,0,0)
 			if UIS:IsKeyDown(Enum.KeyCode.W)     then vel = vel + cf.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.S)     then vel = vel - cf.LookVector end
 			if UIS:IsKeyDown(Enum.KeyCode.A)     then vel = vel - cf.RightVector end
 			if UIS:IsKeyDown(Enum.KeyCode.D)     then vel = vel + cf.RightVector end
 			if UIS:IsKeyDown(Enum.KeyCode.Space) then vel = vel + Vector3.new(0,1,0) end
 			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then vel = vel - Vector3.new(0,1,0) end
-			bv.Velocity  = vel.Magnitude > 0 and vel.Unit * sp or Vector3.zero
+			bv.Velocity  = vel.Magnitude > 0 and vel.Unit * sp or Vector3.new(0,0,0)
 			bg.CFrame    = cf
 		end)
 	else
@@ -1137,7 +1137,7 @@ createButton(charSubs["Teleport"], "Bring All Players to Me",
 	for _, p in ipairs(Players:GetPlayers()) do
 		if p ~= player then
 			local pc = p.Character; local phrp = pc and pc:FindFirstChild("HumanoidRootPart")
-			if phrp then phrp.CFrame = CFrame.new(pos + Vector3.new(count * 2, 0, 0)); count += 1 end
+			if phrp then phrp.CFrame = CFrame.new(pos + Vector3.new(count * 2, 0, 0)); count = count + 1 end
 		end
 	end
 	notify("Brought " .. count .. " players", "success")
@@ -1174,7 +1174,7 @@ createToggle(charSubs["Modifiers"], "Freeze Self", "Anchors HRP — you cannot b
 	local c = player.Character; local hrp = c and c:FindFirstChild("HumanoidRootPart")
 	if hrp then
 		hrp.Anchored = on
-		if on then hrp.Velocity = Vector3.zero; hrp.RotVelocity = Vector3.zero end
+		if on then hrp.Velocity = Vector3.new(0,0,0); hrp.RotVelocity = Vector3.new(0,0,0) end
 	end
 end)
 divider(charSubs["Modifiers"])
@@ -1213,12 +1213,13 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 	if on then
 		RunService:BindToRenderStep("ESPUpdate", Enum.RenderPriority.Camera.Value+1, function()
 			for _, tgt in ipairs(Players:GetPlayers()) do
-				if tgt == player then continue end
+					repeat
+				if tgt == player then break end
 				local ch = tgt.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
 				if not hrp then
 					if ch then local old = ch:FindFirstChild("ESPBillboard"); if old then old:Destroy() end end
-					continue
+					break
 				end
 				local bb = hrp:FindFirstChild("ESPBillboard")
 				if not bb then
@@ -1248,6 +1249,7 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 				if bb then bb:Destroy() end
 			end
 		end
+					until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1255,8 +1257,9 @@ divider(visSubs["Players"])
 createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outline through walls", function(on)
 	_G.HLEnabled = on
 	for _, p in ipairs(Players:GetPlayers()) do
-		if p == player then continue end
-		local ch = p.Character; if not ch then continue end
+			repeat
+		if p == player then break end
+		local ch = p.Character; if not ch then break end
 		if on then
 			local hl = Instance.new("SelectionBox", ch)
 			hl.Name = "NobodyHL"; hl.Adornee = ch
@@ -1266,6 +1269,7 @@ createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outl
 			local hl = ch:FindFirstChild("NobodyHL"); if hl then hl:Destroy() end
 		end
 	end
+			until true
 end)
 divider(visSubs["Players"])
 
@@ -1276,8 +1280,9 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 			if not _G.RainbowHLOn then RunService:UnbindFromRenderStep("RainbowHL"); return end
 			local hue = tick() * 0.2 % 1
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
-				local ch = p.Character; if not ch then continue end
+					repeat
+				if p == player then break end
+				local ch = p.Character; if not ch then break end
 				local hl = ch:FindFirstChild("NobodyRL")
 				if not hl then
 					hl = Instance.new("SelectionBox", ch)
@@ -1287,6 +1292,7 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 				local col = Color3.fromHSV(hue, 0.85, 1)
 				hl.Color3 = col; hl.SurfaceColor3 = col
 			end
+					until true
 		end)
 	else
 		for _, p in ipairs(Players:GetPlayers()) do
@@ -1302,10 +1308,11 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 	if on then
 		RunService:BindToRenderStep("HealthBarUpdate", Enum.RenderPriority.Camera.Value+1, function()
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+					repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 				local hum = ch and ch:FindFirstChildOfClass("Humanoid")
-				if not hrp or not hum then continue end
+				if not hrp or not hum then break end
 				local bb = hrp:FindFirstChild("NobodyHPBar")
 				if not bb then
 					bb = Instance.new("BillboardGui", hrp); bb.Name = "NobodyHPBar"
@@ -1332,6 +1339,7 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 				if hrp then local bb = hrp:FindFirstChild("NobodyHPBar"); if bb then bb:Destroy() end end
 			end
 		end
+					until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1342,9 +1350,10 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 			local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
 			if not myHRP then return end
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+					repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				local bb = hrp:FindFirstChild("NobodyNameTag")
 				if not bb then
 					bb = Instance.new("BillboardGui", hrp); bb.Name = "NobodyNameTag"
@@ -1371,6 +1380,7 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 				if hrp then local bb = hrp:FindFirstChild("NobodyNameTag"); if bb then bb:Destroy() end end
 			end
 		end
+					until true
 	end
 end)
 
@@ -1558,21 +1568,23 @@ local desSubs = createSubTabs(desPage, {"Aim", "Fling"})
 sectionLabel(desSubs["Aim"], "Aim Assistance", T.DANGER)
 divider(desSubs["Aim"])
 
-createToggle(desSubs["Aim"], "Aimbot", "Hold RMB to snap camera to nearest enemy", function(on)
+createToggle(desSubs["Aim"], "Aimbot", "Hold LMB to snap camera to nearest enemy", function(on)
 	if on then
 		RunService:BindToRenderStep("AimbotUpdate", Enum.RenderPriority.Camera.Value+1, function()
-			if not UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then return end
+			if not UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then return end
 			local cam = workspace.CurrentCamera
 			local best, bestDist = nil, math.huge
 			local cx, cy = cam.ViewportSize.X/2, cam.ViewportSize.Y/2
 			for _, p in ipairs(Players:GetPlayers()) do
-				if p == player then continue end
+					repeat
+				if p == player then break end
 				local ch = p.Character; local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+				if not hrp then break end
 				local sp, onScreen = cam:WorldToScreenPoint(hrp.Position)
-				if not onScreen then continue end
+				if not onScreen then break end
 				local d = (Vector2.new(sp.X, sp.Y) - Vector2.new(cx, cy)).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
+					until true
 			end
 			if best then
 				cam.CFrame = CFrame.new(cam.CFrame.Position, best.Position + Vector3.new(0,1.5,0))
@@ -1633,14 +1645,14 @@ createInputButton(desSubs["Fling"], "Fling Player",
 	myHum.WalkSpeed = 0; myHum.JumpPower = 0; myHum.PlatformStand = true
 	RunService:UnbindFromRenderStep("NoclipUpdate")
 	local bv = Instance.new("BodyVelocity", myHRP)
-	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.zero
+	bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.new(0,0,0)
 	local cleaned = false
 	local function cleanup()
 		if cleaned then return end; cleaned = true
 		if bv and bv.Parent then bv:Destroy() end
 		myHum.WalkSpeed = origWS; myHum.JumpPower = origJP
 		myHum.PlatformStand = false; myHum.AutoRotate = true
-		myHRP.Anchored = true; myHRP.Velocity = Vector3.zero
+		myHRP.Anchored = true; myHRP.Velocity = Vector3.new(0,0,0)
 		myHRP.CFrame = origCF; task.wait(0.2); myHRP.Anchored = false
 		myHum:ChangeState(Enum.HumanoidStateType.GettingUp)
 	end
