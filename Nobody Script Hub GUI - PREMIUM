@@ -1541,6 +1541,7 @@ createToggle(visSubs["Players"], "Player ESP", "Names + HP + distance through wa
 					lbl.Text = tgt.Name .. "\n❤ " .. math.floor(hum.Health) .. "  📍 " .. dist .. "m"
 					lbl.TextColor3 = Color3.fromHSV(hum.Health/hum.MaxHealth * 0.33, 0.9, 1)
 				end
+				until true
 			end
 		end)
 	else
@@ -1570,6 +1571,7 @@ createToggle(visSubs["Players"], "Player Highlight (Chams)", "Violet fill + outl
 		else
 			local hl = ch:FindFirstChild("NobodyHL"); if hl then hl:Destroy() end
 		end
+		until true
 	end
 end)
 divider(visSubs["Players"])
@@ -1592,6 +1594,7 @@ createToggle(visSubs["Players"], "Rainbow Chams", "Hue-shifting highlight cycles
 				end
 				local col = Color3.fromHSV(hue, 0.85, 1)
 				hl.Color3 = col; hl.SurfaceColor3 = col
+				until true
 			end
 		end)
 	else
@@ -1629,6 +1632,7 @@ createToggle(visSubs["Players"], "Health Bars", "Gradient health bar above every
 					fill.Size = UDim2.new(pct, 0, 1, 0)
 					fill.BackgroundColor3 = Color3.fromHSV(pct * 0.33, 0.9, 1)
 				end
+				until true
 			end
 		end)
 	else
@@ -1669,6 +1673,7 @@ createToggle(visSubs["Players"], "Name Tags (Distance)", "Shows player name + ra
 					local d = math.floor((hrp.Position - myHRP.Position).Magnitude)
 					lbl.Text = p.Name .. "  [" .. d .. "m]"
 				end
+				until true
 			end
 		end)
 	else
@@ -2061,6 +2066,7 @@ createToggle(desSubs["Aim"], "Lock-On Aim", "Hold RMB — hard locks camera to n
 				if not hrp then break end
 				local d = (hrp.Position - myHRP.Position).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
+				until true
 			end
 			if best then
 				cam.CFrame = CFrame.lookAt(cam.CFrame.Position, best.Position + Vector3.new(0,1.5,0))
@@ -2086,6 +2092,7 @@ createToggle(desSubs["Aim"], "Aim-at-Nearest on Shot", "Every LMB automatically 
 				if not hrp then break end
 				local d = (hrp.Position - myHRP.Position).Magnitude
 				if d < bestDist then bestDist = d; best = hrp end
+				until true
 			end
 			if best then
 				cam.CFrame = CFrame.lookAt(cam.CFrame.Position, best.Position + Vector3.new(0,1.5,0))
@@ -2201,6 +2208,7 @@ createToggle(desSubs["Melee"], "Kill Aura", "Virtual-clicks nearest enemy within
 					VIM:SendMouseButtonEvent(sp.X, sp.Y, 0, true,  game, 0)
 					VIM:SendMouseButtonEvent(sp.X, sp.Y, 0, false, game, 0)
 				end
+				until true
 			end
 		end)
 	else RunService:UnbindFromRenderStep("KillAura") end
@@ -2434,6 +2442,7 @@ createButton(desSubs["Utility"], "Fling All Players", "Flings every player on th
 		bv.Velocity = Vector3.new(math.random(-500,500), 800, math.random(-500,500))
 		game:GetService("Debris"):AddItem(bv, 0.5)
 		count = count + 1
+		until true
 	end
 	notify("Flung " .. count .. " players", "success")
 end)
